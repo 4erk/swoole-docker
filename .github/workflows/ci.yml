@@ -29,7 +29,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          key: "${{ runner.os }}-buildx-${{ github.sha }}"
           restore-keys: |
             ${{ runner.os }}-buildx-
 
@@ -42,13 +42,24 @@ jobs:
       - name: Set environment variables
         run: echo "ENV=${{ matrix.environment }}" >> $GITHUB_ENV
 
-      - name: Build Docker image
+      - name: Install dependencies
+        run: npm install semantic-release @semantic-release/git @semantic-release/github
+
+      - name: Get next version
+        id: get_version
+        run: echo "VERSION=$(npx semantic-release --dry-run | grep "The next release version is" | sed -E 's/^.*is ([0-9]+\.[0-9]+\.[0-9]+).*$/\1/')" >> $GITHUB_ENV
+
+      - name: Build Docker image with version
         run: |
-          docker build --build-arg ENV=${{ matrix.environment }} --build-arg DEBUG=${{ matrix.environment == 'dev' }} -t $REGISTRY/$IMAGE_NAME:${{ matrix.environment }} .
+          docker build --build-arg ENV=${{ matrix.environment }} --build-arg DEBUG=${{ matrix.environment == 'dev' }} -t $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}-${{ env.VERSION }} .
+
+      - name: Build Docker image without version (latest for environment)
+        run: |
+          docker tag $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}-${{ env.VERSION }} $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}
 
       - name: Test Docker image
         run: |
-          docker run --rm $REGISTRY/$IMAGE_NAME:${{ matrix.environment }} php -r 'echo "Hello, World!";'
+          docker run --rm $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}-${{ env.VERSION }} php -r 'echo "Hello, World!";'
 
   publish:
     runs-on: ubuntu-latest
@@ -67,15 +78,30 @@ jobs:
 
       - name: Pull built images
         run: |
-          docker pull $REGISTRY/$IMAGE_NAME:dev
-          docker pull $REGISTRY/$IMAGE_NAME:test
-          docker pull $REGISTRY/$IMAGE_NAME:prod
+          docker pull $REGISTRY/$IMAGE_NAME:dev-${{ env.VERSION }}
+          docker pull $REGISTRY/$IMAGE_NAME:test-${{ env.VERSION }}
+          docker pull $REGISTRY/$IMAGE_NAME:prod-${{ env.VERSION }}
 
-      - name: Push dev image
+      - name: Push dev image with version
+        run: docker push $REGISTRY/$IMAGE_NAME:dev-${{ env.VERSION }}
+
+      - name: Push dev image without version
         run: docker push $REGISTRY/$IMAGE_NAME:dev
 
-      - name: Push test image
+      - name: Push test image with version
+        run: docker push $REGISTRY/$IMAGE_NAME:test-${{ env.VERSION }}
+
+      - name: Push test image without version
         run: docker push $REGISTRY/$IMAGE_NAME:test
 
-      - name: Push prod image
+      - name: Push prod image with version
+        run: docker push $REGISTRY/$IMAGE_NAME:prod-${{ env.VERSION }}
+
+      - name: Push prod image without version
         run: docker push $REGISTRY/$IMAGE_NAME:prod
+
+      - name: Tag and push latest prod image
+        if: matrix.environment == 'prod'
+        run: |
+          docker tag $REGISTRY/$IMAGE_NAME:prod-${{ env.VERSION }} $REGISTRY/$IMAGE_NAME:latest
+          docker push $REGISTRY/$IMAGE_NAME:latest
