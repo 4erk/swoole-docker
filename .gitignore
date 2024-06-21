@@ -1,0 +1,30 @@
+# PHPStorm
+.idea
+
+# VSCode
+.vscode
+
+# Composer
+vendor
+
+# PHPUnit
+.phpunit.result.cache
+
+# Docker
+docker-compose.prod.yml
+docker-compose.dev.yml
+docker-compose.test.yml
+
+# Environments
+.env
+docker/.env
+
+# Node.js
+node_modules/
+
+# Log files
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db

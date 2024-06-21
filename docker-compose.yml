@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        ENV: ${ENV}
+        DEBUG: ${DEBUG}
+    env_file:
+      - .env
+    volumes:
+      - ./:/var/www
+    ports:
+      - "${PORT}:${PORT}"
