@@ -41,7 +41,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/4erk/swoole-docker.git"
+          git remote set-url origin "https://github.com/4erk/swoole-docker.git"
           git push origin main
 
       - name: Build Docker image
