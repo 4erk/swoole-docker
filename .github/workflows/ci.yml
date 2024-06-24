@@ -38,8 +38,6 @@ jobs:
           git commit -m "chore(release): update version"
 
       - name: Push changes
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           git remote set-url origin "https://github.com/4erk/swoole-docker.git"
           git push origin main
