@@ -39,15 +39,12 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
-      - name: Make changes
-        run: |
-          # Ваши команды для изменения файлов
-          git add .
-          git commit -m "chore(release): update version"
-
       - name: Push changes
         run: |
           git remote set-url origin "https://github.com/4erk/swoole-docker.git"
+          git pull origin main --rebase
+          git add .
+          git commit -m "chore(release): update version"
           git push origin main
 
       - name: Build Docker image
