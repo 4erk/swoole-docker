@@ -16,7 +16,7 @@ $server->on("start", function ($server) {
 
 $server->on("request", function ($request, $response) use ($env) {
     $response->header("Content-Type", "text/plain");
-    $response->end("Hello, World!" . $env);
+    $response->end("Hello, World! " . $env);
 });
 
 $server->start();

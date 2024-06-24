@@ -6,60 +6,44 @@ on:
       - main
       - dev
 
-env:
-  REGISTRY: docker.io
-  IMAGE_NAME: 4erk/swoole-docker
-
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        environment: [dev, test, prod]
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Cache Docker layers
-        uses: actions/cache@v3
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
         with:
-          path: /tmp/.buildx-cache
-          key: "${{ runner.os }}-buildx-${{ github.sha }}"
-          restore-keys: |
-            ${{ runner.os }}-buildx-
+          php-version: '8.3'
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest
 
-      - name: Set environment variables
-        run: echo "ENV=${{ matrix.environment }}" >> $GITHUB_ENV
+      - name: Update version
+        run: php version-update.php
 
-      - name: Install dependencies
-        run: npm install semantic-release @semantic-release/git @semantic-release/github
-
-      - name: Get next version
-        id: get_version
-        run: echo "VERSION=$(npx semantic-release --dry-run | grep "The next release version is" | sed -E 's/^.*is ([0-9]+\.[0-9]+\.[0-9]+).*$/\1/')" >> $GITHUB_ENV
-
-      - name: Build Docker image with version
+      - name: Commit updated composer.json
         run: |
-          docker build --build-arg ENV=${{ matrix.environment }} --build-arg DEBUG=${{ matrix.environment == 'dev' }} -t $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}-${{ env.VERSION }} .
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add composer.json
+          git commit -m "chore(release): update version"
+          git push origin ${{ github.ref }}
 
-      - name: Build Docker image without version (latest for environment)
+      - name: Build Docker image
         run: |
-          docker tag $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}-${{ env.VERSION }} $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}
+          docker build --build-arg ENV=${{ matrix.environment }} --build-arg DEBUG=${{ matrix.environment == 'dev' }} -t $REGISTRY/$IMAGE_NAME:${{ matrix.environment }} .
 
-      - name: Test Docker image
+      - name: Tag Docker image with version
         run: |
-          docker run --rm $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}-${{ env.VERSION }} php -r 'echo "Hello, World!";'
+          docker tag $REGISTRY/$IMAGE_NAME:${{ matrix.environment }} $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}-${{ env.VERSION }}
+          docker push $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}-${{ env.VERSION }}
+
+      - name: Push Docker image
+        run: docker push $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}
 
   publish:
     runs-on: ubuntu-latest
@@ -68,37 +52,37 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Pull built images
         run: |
+          docker pull $REGISTRY/$IMAGE_NAME:dev
+          docker pull $REGISTRY/$IMAGE_NAME:test
+          docker pull $REGISTRY/$IMAGE_NAME:prod
           docker pull $REGISTRY/$IMAGE_NAME:dev-${{ env.VERSION }}
           docker pull $REGISTRY/$IMAGE_NAME:test-${{ env.VERSION }}
           docker pull $REGISTRY/$IMAGE_NAME:prod-${{ env.VERSION }}
 
-      - name: Push dev image with version
-        run: docker push $REGISTRY/$IMAGE_NAME:dev-${{ env.VERSION }}
+      - name: Push dev image
+        run: |
+          docker push $REGISTRY/$IMAGE_NAME:dev
+          docker push $REGISTRY/$IMAGE_NAME:dev-${{ env.VERSION }}
 
-      - name: Push dev image without version
-        run: docker push $REGISTRY/$IMAGE_NAME:dev
+      - name: Push test image
+        run: |
+          docker push $REGISTRY/$IMAGE_NAME:test
+          docker push $REGISTRY/$IMAGE_NAME:test-${{ env.VERSION }}
 
-      - name: Push test image with version
-        run: docker push $REGISTRY/$IMAGE_NAME:test-${{ env.VERSION }}
-
-      - name: Push test image without version
-        run: docker push $REGISTRY/$IMAGE_NAME:test
-
-      - name: Push prod image with version
-        run: docker push $REGISTRY/$IMAGE_NAME:prod-${{ env.VERSION }}
-
-      - name: Push prod image without version
-        run: docker push $REGISTRY/$IMAGE_NAME:prod
+      - name: Push prod image
+        run: |
+          docker push $REGISTRY/$IMAGE_NAME:prod
+          docker push $REGISTRY/$IMAGE_NAME:prod-${{ env.VERSION }}
 
       - name: Tag and push latest prod image
         if: matrix.environment == 'prod'
