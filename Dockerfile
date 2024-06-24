@@ -47,6 +47,3 @@ RUN if [ "$ENV" = "prod" ]; then \
 
 # Открытие порта
 EXPOSE $PORT
-
-# Команда для запуска
-CMD ["php", "server.php"]
