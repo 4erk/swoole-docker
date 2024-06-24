@@ -18,7 +18,6 @@ try {
         // Получение последнего коммита
         $lastCommit = trim(shell_exec('git log -1 --pretty=%B'));
 
-        // Определение типа версии на основе коммита
         if (str_starts_with($lastCommit, 'BREAKING CHANGE:')) {
             $newVersion = $version->incrementMajor();
         }
