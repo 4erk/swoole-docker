@@ -10,6 +10,10 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        environment: [ dev, test, prod ]
+
     env:
       REGISTRY: 4erk
       IMAGE_NAME: swoole-docker
