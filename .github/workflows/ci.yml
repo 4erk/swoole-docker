@@ -10,6 +10,10 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    env:
+      REGISTRY: 4erk
+      IMAGE_NAME: swoole-docker
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
