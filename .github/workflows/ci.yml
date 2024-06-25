@@ -31,19 +31,19 @@ jobs:
       - name: Extract version from composer.json
         id: extract_version
         run: |
-          VERSION=$(php version.php)
-          echo "::set-output name=version::$VERSION"
+          VERSION=$(php -r 'echo json_decode(file_get_contents("composer.json"), true)["version"];')
+          echo "VERSION=${VERSION}" >> $GITHUB_STATE
 
       - name: Build Docker image
         env:
-          VERSION: ${{ steps.extract_version.outputs.version }}
+          VERSION: $VERSION
         run: |
           docker build --build-arg ENV=${{ matrix.environment }} --build-arg DEBUG=${{ matrix.environment == 'dev' }} -t $REGISTRY/$IMAGE_NAME:${{ matrix.environment }} .
 
       - name: Tag Docker image with version
         run: |
-          docker tag $REGISTRY/$IMAGE_NAME:${{ matrix.environment }} $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}-${{ env.VERSION }}
-          docker push $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}-${{ env.VERSION }}
+          docker tag $REGISTRY/$IMAGE_NAME:${{ matrix.environment }} $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}-${{ VERSION }}
+          docker push $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}-${{ VERSION }}
 
       - name: Push Docker image
         run: docker push $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}
