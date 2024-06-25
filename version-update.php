@@ -25,7 +25,6 @@ try {
             $newVersion = $version->incrementMinor();
         }
         else {
-
             $newVersion = $version->incrementPatch();
         }
 
