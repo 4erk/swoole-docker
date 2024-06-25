@@ -36,7 +36,7 @@ jobs:
 
       - name: Build Docker image
         env:
-          VERSION: $VERSION
+          VERSION: ${{ steps.extract_version.outputs.VERSION }}
         run: |
           docker build --build-arg ENV=${{ matrix.environment }} --build-arg DEBUG=${{ matrix.environment == 'dev' }} -t $REGISTRY/$IMAGE_NAME:${{ matrix.environment }} .
 
