@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# Запуск файла version-update.php
+php version-update.php
+
+# Проверка успешности выполнения скрипта
+if [ $? -ne 0 ]; then
+    echo "version-update.php failed"
+    exit 1
+fi
