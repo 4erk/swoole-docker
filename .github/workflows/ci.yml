@@ -31,7 +31,7 @@ jobs:
       - name: Extract version from composer.json
         id: extract_version
         run: |
-          VERSION=$(php extract-version.php)
+          VERSION=$(php version.php)
           echo "::set-output name=version::$VERSION"
 
       - name: Build Docker image
