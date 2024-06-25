@@ -41,7 +41,6 @@ jobs:
 
       - name: Push changes
         run: |
-          git pull --rebase
           git add .
           git commit -m "chore(release): update version"
           git push origin main
