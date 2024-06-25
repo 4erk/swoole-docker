@@ -18,6 +18,7 @@ jobs:
       REGISTRY: 4erk
       IMAGE_NAME: swoole-docker
 
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,7 +28,15 @@ jobs:
         with:
           php-version: '8.3'
 
+      - name: Extract version from composer.json
+        id: extract_version
+        run: |
+          VERSION=$(php extract-version.php)
+          echo "::set-output name=version::$VERSION"
+
       - name: Build Docker image
+        env:
+          VERSION: ${{ steps.extract_version.outputs.version }}
         run: |
           docker build --build-arg ENV=${{ matrix.environment }} --build-arg DEBUG=${{ matrix.environment == 'dev' }} -t $REGISTRY/$IMAGE_NAME:${{ matrix.environment }} .
 
