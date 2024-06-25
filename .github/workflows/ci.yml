@@ -39,10 +39,8 @@ jobs:
           docker build --build-arg ENV=${{ matrix.environment }} --build-arg DEBUG=${{ matrix.environment == 'dev' }} -t $REGISTRY/$IMAGE_NAME:${{ matrix.environment }} .
 
       - name: Tag Docker image with version
-        env:
-          VERSION: ${{ steps.extract_version.outputs.VERSION }}
         run: |
-          docker tag $REGISTRY/$IMAGE_NAME:${{ matrix.environment }} $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}-${{ env.VERSION }}
+          docker tag $REGISTRY/$IMAGE_NAME:${{ matrix.environment }} $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}-${{ GITHUB_OUTPUT }}
           docker push $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}-${{ VERSION }}
 
       - name: Push Docker image
@@ -70,35 +68,31 @@ jobs:
           echo "VERSION=${VERSION}" >> $GITHUB_STATE
 
       - name: Pull built images
-        env:
-          VERSION: ${{ steps.extract_version.outputs.VERSION }}
         run: |
           docker pull $REGISTRY/$IMAGE_NAME:dev
           docker pull $REGISTRY/$IMAGE_NAME:test
           docker pull $REGISTRY/$IMAGE_NAME:prod
-          docker pull $REGISTRY/$IMAGE_NAME:dev-${{ env.VERSION }}
-          docker pull $REGISTRY/$IMAGE_NAME:test-${{ env.VERSION }}
-          docker pull $REGISTRY/$IMAGE_NAME:prod-${{ env.VERSION }}
+          docker pull $REGISTRY/$IMAGE_NAME:dev-${{ GITHUB_OUTPUT }}
+          docker pull $REGISTRY/$IMAGE_NAME:test-${{ GITHUB_OUTPUT }}
+          docker pull $REGISTRY/$IMAGE_NAME:prod-${{ GITHUB_OUTPUT }}
 
       - name: Push dev image
-        env:
-          VERSION: ${{ steps.extract_version.outputs.VERSION }}
         run: |
           docker push $REGISTRY/$IMAGE_NAME:dev
-          docker push $REGISTRY/$IMAGE_NAME:dev-${{ env.VERSION }}
+          docker push $REGISTRY/$IMAGE_NAME:dev-${{ GITHUB_OUTPUT }}
 
       - name: Push test image
         run: |
           docker push $REGISTRY/$IMAGE_NAME:test
-          docker push $REGISTRY/$IMAGE_NAME:test-${{ env.VERSION }}
+          docker push $REGISTRY/$IMAGE_NAME:test-${{ GITHUB_OUTPUT }}
 
       - name: Push prod image
         run: |
           docker push $REGISTRY/$IMAGE_NAME:prod
-          docker push $REGISTRY/$IMAGE_NAME:prod-${{ env.VERSION }}
+          docker push $REGISTRY/$IMAGE_NAME:prod-${{ GITHUB_OUTPUT }}
 
       - name: Tag and push latest prod image
         if: matrix.environment == 'prod'
         run: |
-          docker tag $REGISTRY/$IMAGE_NAME:prod-${{ env.VERSION }} $REGISTRY/$IMAGE_NAME:latest
+          docker tag $REGISTRY/$IMAGE_NAME:prod-${{ GITHUB_OUTPUT }} $REGISTRY/$IMAGE_NAME:latest
           docker push $REGISTRY/$IMAGE_NAME:latest
