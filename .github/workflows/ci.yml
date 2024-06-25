@@ -41,8 +41,6 @@ jobs:
 
       - name: Push changes
         run: |
-          git remote set-url origin "https://github.com/4erk/swoole-docker.git"
-          git pull origin main --rebase
           git add .
           git commit -m "chore(release): update version"
           git push origin main
