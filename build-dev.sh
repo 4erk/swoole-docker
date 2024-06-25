@@ -4,7 +4,7 @@
 cp docker/.env.dev .env
 
 # Получение версии из semantic-release
-VERSION=$(npx semantic-release --dry-run | grep "The next release version is" | sed -E 's/^.*is ([0-9]+\.[0-9]+\.[0-9]+).*$/\1/')
+VERSION=$(php -r 'echo json_decode(file_get_contents("composer.json"), true)["version"];')
 
 # Сборка образа для dev с версией
 docker build --build-arg ENV=dev --build-arg DEBUG=true -t 4erk/swoole-docker:dev-$VERSION .
