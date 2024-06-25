@@ -36,15 +36,15 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build --build-arg ENV=${{ matrix.environment }} --build-arg DEBUG=${{ matrix.environment == 'dev' }} -t $REGISTRY/$IMAGE_NAME:${{ matrix.environment }} .
+          docker build --build-arg ENV=${{ matrix.environment }} --build-arg DEBUG=${{ matrix.environment == 'dev' }} -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.environment }} .
 
       - name: Tag Docker image with version
         run: |
-          docker tag $REGISTRY/$IMAGE_NAME:${{ matrix.environment }} $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}-${{ steps.extract_version.outputs.VERSION }}
-          docker push $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}-${{ steps.extract_version.outputs.VERSION }}
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.environment }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.environment }}-${{ steps.extract_version.outputs.VERSION }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.environment }}-${{ steps.extract_version.outputs.VERSION }}
 
       - name: Push Docker image
-        run: docker push $REGISTRY/$IMAGE_NAME:${{ matrix.environment }}
+        run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.environment }}
 
   publish:
     runs-on: ubuntu-latest
@@ -69,30 +69,30 @@ jobs:
 
       - name: Pull built images
         run: |
-          docker pull $REGISTRY/$IMAGE_NAME:dev
-          docker pull $REGISTRY/$IMAGE_NAME:test
-          docker pull $REGISTRY/$IMAGE_NAME:prod
-          docker pull $REGISTRY/$IMAGE_NAME:dev-${{ steps.extract_version.outputs.VERSION }}
-          docker pull $REGISTRY/$IMAGE_NAME:test-${{ steps.extract_version.outputs.VERSION }}
-          docker pull $REGISTRY/$IMAGE_NAME:prod-${{ steps.extract_version.outputs.VERSION }}
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:test
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:prod
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-${{ steps.extract_version.outputs.VERSION }}
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:test-${{ steps.extract_version.outputs.VERSION }}
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:prod-${{ steps.extract_version.outputs.VERSION }}
 
       - name: Push dev image
         run: |
-          docker push $REGISTRY/$IMAGE_NAME:dev
-          docker push $REGISTRY/$IMAGE_NAME:dev-${{ steps.extract_version.outputs.VERSION }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-${{ steps.extract_version.outputs.VERSION }}
 
       - name: Push test image
         run: |
-          docker push $REGISTRY/$IMAGE_NAME:test
-          docker push $REGISTRY/$IMAGE_NAME:test-${{ steps.extract_version.outputs.VERSION }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:test
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:test-${{ steps.extract_version.outputs.VERSION }}
 
       - name: Push prod image
         run: |
-          docker push $REGISTRY/$IMAGE_NAME:prod
-          docker push $REGISTRY/$IMAGE_NAME:prod-${{ steps.extract_version.outputs.VERSION }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:prod
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:prod-${{ steps.extract_version.outputs.VERSION }}
 
       - name: Tag and push latest prod image
         if: matrix.environment == 'prod'
         run: |
-          docker tag $REGISTRY/$IMAGE_NAME:prod-${{ steps.extract_version.outputs.VERSION }} $REGISTRY/$IMAGE_NAME:latest
-          docker push $REGISTRY/$IMAGE_NAME:latest
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:prod-${{ steps.extract_version.outputs.VERSION }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
