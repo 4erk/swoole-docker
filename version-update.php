@@ -26,6 +26,7 @@ try {
         }
         else {
             $newVersion = $version->incrementPatch();
+
         }
 
         $newVersion = (string)$newVersion;
